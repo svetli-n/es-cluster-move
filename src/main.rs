@@ -79,14 +79,14 @@ fn add_settings_mappings(opts: &Opts, client: &Client, indices: &Vec<String>) ->
         let resp = client.get(index_url).send()?.json::<serde_json::Value>()?;
         let mappings = resp[index]["mappings"].clone();
         let settings = resp[index]["settings"].to_string();
-        let mut settings_value: HashMap<String, HashMap<String, Value>> = serde_json::from_str(settings.as_str()).unwrap();
+        let mut settings_value: HashMap<String, HashMap<String, Value>> = serde_json::from_str(settings.as_str())?;
         let mut settings_value_index = settings_value.get("index").unwrap().clone();
         settings_value_index.remove("creation_date");
         settings_value_index.remove("provided_name");
         settings_value_index.remove("uuid");
         settings_value_index.remove("version");
         settings_value.insert("index".to_string(), settings_value_index);
-        let new_settings = serde_json::to_value(settings_value).unwrap();
+        let new_settings = serde_json::to_value(settings_value)?;
         let mut m = serde_json::Map::new();
         m.insert("mappings".to_string(), mappings);
         m.insert("settings".to_string(), new_settings);
