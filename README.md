@@ -1,3 +1,3 @@
-# es-cluster-move
+# Elasticsearch operations
 
-Migrate Elasticsearch cluster to a new one.
+- Migrate Elasticsearch cluster
