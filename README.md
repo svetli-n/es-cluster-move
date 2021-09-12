@@ -1,3 +1,3 @@
 # Elasticsearch operations
 
-- Migrate Elasticsearch cluster
+- Migrate cluster
