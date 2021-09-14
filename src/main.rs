@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter::Map;
 use serde_json::{Value, json};
 use reqwest::blocking::Client;
 use std::error::Error;
@@ -19,10 +18,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let client = reqwest::blocking::Client::new();
     let mut indices: Vec<String> = Vec::new();
     let mut aliases: HashMap<String, String> = HashMap::new();
-    get_indices_aliases(&opts, &client, &mut indices, &mut aliases);
-    add_settings_mappings(&opts, &client, &indices);
-    reindex(&opts, &client, &indices);
-    add_aliases(&opts, &client, &aliases);
+    get_indices_aliases(&opts, &client, &mut indices, &mut aliases)?;
+    add_settings_mappings(&opts, &client, &indices)?;
+    reindex(&opts, &client, &indices)?;
+    add_aliases(&opts, &client, &aliases)?;
     Ok(())
 }
 
