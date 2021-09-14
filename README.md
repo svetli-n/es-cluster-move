@@ -1,3 +1,3 @@
 # Elasticsearch operations
 
-- Move cluster
+- move-cluster
