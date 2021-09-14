@@ -7,9 +7,9 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "example", about = "An example of StructOpt usage.")]
 struct Opts {
-    #[structopt(default_value = "http://localhost:9200")]
+    #[structopt(short, long, default_value = "http://localhost:9200")]
     from_cluster: String,
-    #[structopt(default_value = "http://localhost:9400")]
+    #[structopt(short, long, default_value = "http://localhost:9400")]
     to_cluster: String,
 }
 
