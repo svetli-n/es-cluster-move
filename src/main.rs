@@ -13,7 +13,7 @@ enum Opts {
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     match Opts::from_args() {
-        Opts::MoveCluster(options) => move_cluster(&options)
+        Opts::MoveCluster(options) => move_cluster(options)
     }
 }
 

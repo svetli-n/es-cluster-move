@@ -127,7 +127,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "es-cluster-move"
+name = "es-operations"
 version = "0.1.0"
 dependencies = [
  "env_logger",
