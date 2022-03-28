@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-use serde_json::{Value, json};
 use reqwest::blocking::{Client, Response};
+use reqwest::StatusCode;
+use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::error::Error;
 use structopt::StructOpt;
-use reqwest::StatusCode;
-
 
 #[derive(Debug, StructOpt, Clone)]
 pub struct Options {
@@ -32,9 +31,7 @@ impl Reindexer {
     }
 }
 
-
 pub fn move_cluster(opts: Options) -> Result<(), Box<dyn Error>> {
-
     let mut reindexer = Reindexer::new(opts);
 
     reindexer.set_indices_aliases()?;
@@ -45,10 +42,12 @@ pub fn move_cluster(opts: Options) -> Result<(), Box<dyn Error>> {
 }
 
 impl Reindexer {
-
     fn set_indices_aliases(&mut self) -> Result<(), Box<dyn Error>> {
         let from_cluster_aliases_url = format!("{}/_alias", self.opts.from_cluster);
-        let resp = self.client.get(from_cluster_aliases_url).send()?
+        let resp = self
+            .client
+            .get(from_cluster_aliases_url)
+            .send()?
             .json::<HashMap<String, HashMap<String, HashMap<String, HashMap<String, String>>>>>()?;
         resp.iter().for_each(|(k, val)| {
             // skip internal indices
@@ -76,17 +75,19 @@ impl Reindexer {
         let index_url = format!("{}/_reindex", self.opts.to_cluster);
         for index in &self.indices {
             let json = json!({
-          "source": {
-            "remote": {
-              "host": self.opts.from_cluster
-            },
-            "index": index
-          },
-          "dest": {
-            "index": index
-          }
-        });
-            let resp = self.client.post(index_url.as_str())
+              "source": {
+                "remote": {
+                  "host": self.opts.from_cluster
+                },
+                "index": index
+              },
+              "dest": {
+                "index": index
+              }
+            });
+            let resp = self
+                .client
+                .post(index_url.as_str())
                 .json::<serde_json::Value>(&json)
                 .send()?;
             log("reindex", index, resp)?;
@@ -94,14 +95,34 @@ impl Reindexer {
         Ok(())
     }
 
-
     fn add_settings_mappings(&self) -> Result<(), Box<dyn Error>> {
         for index in &self.indices {
             let index_url = &format!("{}/{}", self.opts.from_cluster, index);
-            let resp = self.client.get(index_url).send()?.json::<serde_json::Value>()?;
-            let mappings = resp[index]["mappings"].clone();
+            let resp = self
+                .client
+                .get(index_url)
+                .send()?
+                .json::<serde_json::Value>()?;
+            let mut mappings = resp[index]["mappings"].clone();
+            if mappings
+                .as_object()
+                .expect("mappings is not empty")
+                .keys()
+                .next()
+                .expect("keys is not empty")
+                != "properties"
+            {
+                mappings = mappings
+                    .as_object()
+                    .expect("mappings is not empty")
+                    .values()
+                    .next()
+                    .expect("properties is not empty")
+                    .clone();
+            }
             let settings = resp[index]["settings"].to_string();
-            let mut settings_value: HashMap<String, HashMap<String, Value>> = serde_json::from_str(settings.as_str())?;
+            let mut settings_value: HashMap<String, HashMap<String, Value>> =
+                serde_json::from_str(settings.as_str())?;
             let mut settings_value_index = settings_value.get("index").unwrap().clone();
             settings_value_index.remove("creation_date");
             settings_value_index.remove("provided_name");
@@ -115,7 +136,9 @@ impl Reindexer {
             let settings_mappings = serde_json::Value::Object(m);
 
             let index_url = &format!("{}/{}", self.opts.to_cluster, index);
-            let resp = self.client.put(index_url.as_str())
+            let resp = self
+                .client
+                .put(index_url.as_str())
                 .json::<serde_json::Value>(&settings_mappings)
                 .send()?;
             log("add_settings_mappings", index, resp)?;
@@ -124,10 +147,20 @@ impl Reindexer {
     }
 }
 
-fn log(method: &str, index: &String, resp: Response) -> Result<(), Box<dyn Error>>{
-    log::info!("method: {} index: {} status: {:?}", method, index, resp.status());
+fn log(method: &str, index: &String, resp: Response) -> Result<(), Box<dyn Error>> {
+    log::info!(
+        "method: {} index: {} status: {:?}",
+        method,
+        index,
+        resp.status()
+    );
     if resp.status() != StatusCode::OK {
-        log::error!("method: {} index: {} error: {:?}", method, index, resp.text()?);
+        log::error!(
+            "method: {} index: {} error: {:?}",
+            method,
+            index,
+            resp.text()?
+        );
     }
     Ok(())
 }

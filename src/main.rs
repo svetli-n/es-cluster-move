@@ -1,11 +1,14 @@
 mod move_cluster;
 
+use crate::move_cluster::{move_cluster, Options};
 use std::error::Error;
 use structopt::StructOpt;
-use crate::move_cluster::{Options, move_cluster};
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "Elasticsearch operations", about = "Common Elasticsearch operations.")]
+#[structopt(
+    name = "Elasticsearch operations",
+    about = "Common Elasticsearch operations."
+)]
 enum Opts {
     MoveCluster(Options),
 }
@@ -13,7 +16,6 @@ enum Opts {
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     match Opts::from_args() {
-        Opts::MoveCluster(options) => move_cluster(options)
+        Opts::MoveCluster(options) => move_cluster(options),
     }
 }
-
