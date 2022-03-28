@@ -51,9 +51,12 @@ impl Reindexer {
         let resp = self.client.get(from_cluster_aliases_url).send()?
             .json::<HashMap<String, HashMap<String, HashMap<String, HashMap<String, String>>>>>()?;
         resp.iter().for_each(|(k, val)| {
-            self.indices.push(k.to_string());
-            if let Some(alias) = val.get("aliases").unwrap().keys().next() {
-                self.aliases.insert(k.to_string(), alias.to_string());
+            // skip internal indices
+            if !k.starts_with(".") {
+                self.indices.push(k.to_string());
+                if let Some(alias) = val.get("aliases").unwrap().keys().next() {
+                    self.aliases.insert(k.to_string(), alias.to_string());
+                }
             }
         });
         Ok(())
@@ -75,8 +78,7 @@ impl Reindexer {
             let json = json!({
           "source": {
             "remote": {
-              "host": "http://172.19.0.1:9200"
-              // "host": opts.from_cluster
+              "host": self.opts.from_cluster
             },
             "index": index
           },
