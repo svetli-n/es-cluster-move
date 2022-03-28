@@ -103,23 +103,18 @@ impl Reindexer {
                 .get(index_url)
                 .send()?
                 .json::<serde_json::Value>()?;
-            let mut mappings = resp[index]["mappings"].clone();
-            if mappings
-                .as_object()
-                .expect("mappings is not empty")
-                .keys()
-                .next()
-                .expect("keys is not empty")
-                != "properties"
-            {
-                mappings = mappings
-                    .as_object()
-                    .expect("mappings is not empty")
-                    .values()
-                    .next()
-                    .expect("properties is not empty")
-                    .clone();
+
+            let mut mappings = &resp[index]["mappings"];
+            if let Value::Object(map) = mappings {
+                if let Some(key) = map.keys().next() {
+                    if key != "properties" {
+                        if let Some(val) = map.get(key) {
+                            mappings = val;
+                        }
+                    }
+                }
             }
+
             let settings = resp[index]["settings"].to_string();
             let mut settings_value: HashMap<String, HashMap<String, Value>> =
                 serde_json::from_str(settings.as_str())?;
@@ -131,7 +126,7 @@ impl Reindexer {
             settings_value.insert("index".to_string(), settings_value_index);
             let new_settings = serde_json::to_value(settings_value)?;
             let mut m = serde_json::Map::new();
-            m.insert("mappings".to_string(), mappings);
+            m.insert("mappings".to_string(), mappings.clone());
             m.insert("settings".to_string(), new_settings);
             let settings_mappings = serde_json::Value::Object(m);
 
